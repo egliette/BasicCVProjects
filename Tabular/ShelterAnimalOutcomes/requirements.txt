@@ -4,3 +4,4 @@ sklearn
 torch
 torchvision
 ipykernel
+pyyaml

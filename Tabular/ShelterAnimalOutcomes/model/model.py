@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import logging
 
 class ShelterOutcomeModel(nn.Module):
     def __init__(self, embedding_sizes, n_cont):
@@ -68,8 +69,9 @@ def _val_loss(model, valid_dl):
     return sum_loss / total, correct / total
 
 def train_loop(model, train_dl, valid_dl, optim, epochs, lr=0.01, wd=0.0):
+    logger = logging.getLogger('train')
     for i in range(epochs):
         loss = _train_model(model, optim, train_dl)
         valid_loss, valid_accur = _val_loss(model, valid_dl)
-        print(f"Epoch {i}:\tTraining loss: {loss:.3},\tValid loss {valid_loss:.3},\t Accuracy {valid_accur:.3}")
+        logger.info(f"Epoch {i}:\tTraining loss: {loss:.3},\tValid loss {valid_loss:.3},\t Accuracy {valid_accur:.3}")
 

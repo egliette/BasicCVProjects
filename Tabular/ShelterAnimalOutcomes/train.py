@@ -1,5 +1,6 @@
 import pandas as pd
 import torch
+import logging
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
@@ -7,8 +8,15 @@ from dataloader.dataloaders import ShelterOutcomeDataset, DeviceDataloader
 from utils.utils import get_default_device, to_device
 from model.model import ShelterOutcomeModel, train_loop
 from model.optimizer import get_optimizer
+from logger.logger import setup_logging
+
 
 def main():
+    print("Setup...")
+    setup_logging(save_dir='saved/log', log_config='logger/logger_config.yml')
+    logger = logging.getLogger('train')
+    print("Setup - Done")
+
     print("Data loading...")
     train_data = pd.read_csv("data/train.csv")
     test_X = pd.read_csv("data/test.csv")
@@ -55,7 +63,7 @@ def main():
     embedded_cols_names = embedded_cols.keys()
     embedding_sizes = [(n_categories, min(50, (n_categories+1)//2)) for _, n_categories in embedded_cols.items()]
     print("Data processing - Done")
-    print(X.columns)
+
     print("DataLoaders creating...")
     train_dataset = ShelterOutcomeDataset(train_X, train_Y, embedded_cols_names)
     valid_dataset = ShelterOutcomeDataset(valid_X, valid_Y, embedded_cols_names)
