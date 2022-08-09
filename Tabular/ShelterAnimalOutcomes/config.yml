@@ -1,0 +1,13 @@
+data_processing:
+  drop_columns: ['AnimalID', 'OutcomeType', 'OutcomeSubtype']
+  n_nulls_limit: 10000
+split_file:
+  test_split: 0.1
+embedding:
+  avg_size: 50
+train:
+  batch_size: 1000
+  epochs: 20
+  lr: 0.01
+  wd: 0.0
+  saved_path: 'saved/models/saved_model.pt'

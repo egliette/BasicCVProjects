@@ -1,20 +1,22 @@
 import pandas as pd
+import numpy as np
 import torch
 import logging
+import argparse
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from dataloader.dataloaders import ShelterOutcomeDataset, DeviceDataloader
-from utils.utils import get_default_device, to_device
+from utils.utils import get_default_device, to_device, get_config
 from model.model import ShelterOutcomeModel, train_loop
 from model.optimizer import get_optimizer
 from logger.logger import setup_logging
 
-
-def main():
+def main(config_file_path):
     print("Setup...")
     setup_logging(save_dir='saved/log', log_config='logger/logger_config.yml')
     logger = logging.getLogger('train')
+    config = get_config(config_file_path)
     print("Setup - Done")
 
     print("Data loading...")
@@ -23,7 +25,7 @@ def main():
     print("Data loading - Done")
 
     print("Data processing...")
-    X = train_data.drop(columns=['AnimalID', 'OutcomeType', 'OutcomeSubtype'])
+    X = train_data.drop(columns=config['data_processing']['drop_columns'])
     Y = train_data['OutcomeType']
     stacked_df = X.append(test_X.drop(columns=['ID']))
     stacked_df['DateTime'] = pd.to_datetime(stacked_df['DateTime'])
@@ -33,7 +35,7 @@ def main():
 
     for col in stacked_df.columns:
         n_nulls = stacked_df[col].isnull().sum()
-        if n_nulls > 10000:
+        if n_nulls > config["data_processing"]["n_nulls_limit"]:
             print(f"Drop column {col} with {n_nulls} nulls")
             stacked_df = stacked_df.drop(columns=[col])
 
@@ -52,8 +54,9 @@ def main():
 
     X = stacked_df[:train_data.shape[0]]
     Y = LabelEncoder().fit_transform(Y)
-
-    train_X, valid_X, train_Y, valid_Y = train_test_split(X, Y, test_size=0.1, random_state=0)
+    # Cannot directly pass config['split_file']['test_split] into train_test_split()!
+    test_split = np.array([config['split_file']['test_split']])[0]
+    train_X, valid_X, train_Y, valid_Y = train_test_split(X, Y, test_size=test_split, random_state=0)
 
     embedded_cols = dict()
     for name, col in X.items():
@@ -61,13 +64,13 @@ def main():
         if n_categories > 2:
             embedded_cols[name] = n_categories
     embedded_cols_names = embedded_cols.keys()
-    embedding_sizes = [(n_categories, min(50, (n_categories+1)//2)) for _, n_categories in embedded_cols.items()]
+    embedding_sizes = [(n_categories, min(config["embedding"]["avg_size"], (n_categories+1)//2)) for _, n_categories in embedded_cols.items()]
     print("Data processing - Done")
 
     print("DataLoaders creating...")
     train_dataset = ShelterOutcomeDataset(train_X, train_Y, embedded_cols_names)
     valid_dataset = ShelterOutcomeDataset(valid_X, valid_Y, embedded_cols_names)
-    batch_size = 1000
+    batch_size = config['train']['batch_size']
     train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True)
     valid_dataloader = DataLoader(valid_dataset, batch_size, shuffle=True)
     device = get_default_device()
@@ -80,13 +83,18 @@ def main():
     model = ShelterOutcomeModel(embedding_sizes, n_cont)
     to_device(model, device)
     optim = get_optimizer(model)
-    epochs = 20
-    train_loop(model, train_dl, valid_dl, optim, epochs, lr=0.01, wd=0.0)
+    epochs = config['train']['epochs']
+    train_loop(model, train_dl, valid_dl, optim, epochs, lr=config['train']['lr'], wd=config['train']['wd'])
     print("Model training - Done")
 
     print("Model saving...")
-    torch.save(model, "saved/models/saved_model.pt")
+    torch.save(model, config['train']['saved_path'])
     print("Model saving - Done")
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='ShelterAnimalOutcomes with Pytorch')
+    parser.add_argument('-c', '--config', default='config.yml', type=str,
+                      help='config file path (default: config.yml)')
+    args = parser.parse_args()
+    config_file_path = args.config
+    main(config_file_path)

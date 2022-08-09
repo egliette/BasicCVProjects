@@ -1,20 +1,23 @@
 import torch
 import pandas as pd
 import numpy as np
+import argparse
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import LabelEncoder
 from model.model import ShelterOutcomeModel
 from dataloader.dataloaders import Dataset, ShelterOutcomeDataset, DeviceDataloader
+from utils.utils import get_config
 
-def main():
+def main(config_file_path):
     print("Data loading...")
     train_data = pd.read_csv("data/train.csv")
     test_X = pd.read_csv("data/test.csv")
+    config = get_config("config.yml")
     print("Data loading - Done")
 
     print("Data processing...")
-    X = train_data.drop(columns=['AnimalID', 'OutcomeType', 'OutcomeSubtype'])
+    X = train_data.drop(columns=config['data_processing']['drop_columns'])
     stacked_df = X.append(test_X.drop(columns=['ID']))
     stacked_df['DateTime'] = pd.to_datetime(stacked_df['DateTime'])
     stacked_df['year'] = stacked_df['DateTime'].dt.year
@@ -23,7 +26,7 @@ def main():
 
     for col in stacked_df.columns:
         n_nulls = stacked_df[col].isnull().sum()
-        if n_nulls > 10000:
+        if n_nulls > config["data_processing"]["n_nulls_limit"]:
             print(f"Drop column {col} with {n_nulls} nulls")
             stacked_df = stacked_df.drop(columns=[col])
 
@@ -45,9 +48,9 @@ def main():
         if n_categories > 2:
             embedded_cols[name] = n_categories
     embedded_cols_names = embedded_cols.keys()
-    embedding_sizes = [(n_categories, min(50, (n_categories+1)//2)) for _, n_categories in embedded_cols.items()]
+    embedding_sizes = [(n_categories, min(config["embedding"]["avg_size"], (n_categories+1)//2)) for _, n_categories in embedded_cols.items()]
     print("Data processing - Done")
-    print(test_X.columns)
+
     print("DataLoaders creating...")
     batch_size = 1000
     test_dataset = ShelterOutcomeDataset(test_X, np.zeros(len(test_X)), embedded_cols_names)
@@ -57,7 +60,7 @@ def main():
     print("Model loading...")
     n_cont = len(test_X.columns) - len(embedded_cols_names)
     model = ShelterOutcomeModel(embedding_sizes, n_cont)
-    model = torch.load("saved/models/saved_model.pt")
+    model = torch.load(config['train']['saved_path'])
     print("Model loading - Done")
 
     print("Model referencing...")
@@ -82,4 +85,9 @@ def main():
     print("Model referencing - Done")
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='ShelterAnimalOutcomes with Pytorch')
+    parser.add_argument('-c', '--config', default='config.yml', type=str,
+                      help='config file path (default: config.yml)')
+    args = parser.parse_args()
+    config_file_path = args.config
+    main(config_file_path)

@@ -1,4 +1,5 @@
 import torch
+import yaml
 from pathlib import Path
 
 def ensure_dir(dirname):
@@ -18,3 +19,8 @@ def to_device(data, device):
         return [to_device(x, device) for x in data]
     else:
         return data.to(device, non_blocking=True)
+
+def get_config(file_path):
+    with open(file_path, "r") as f:
+        config = yaml.safe_load(f)
+    return config
