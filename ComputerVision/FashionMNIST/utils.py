@@ -1,7 +1,10 @@
 import os
 import shutil
+
+import torch
 import torchvision
 import pandas as pd
+
 
 def download_fmnist_img_data(is_training=True, save_dir="data/"):
     """
@@ -33,3 +36,6 @@ def download_fmnist_img_data(is_training=True, save_dir="data/"):
     # remove PyTorch data folder
     shutil.rmtree("fmnist_data", ignore_errors=True)
 
+def one_hot_transform(label, num_classes):
+    label_tensor = torch.Tensor([label]).long()
+    return torch.nn.functional.one_hot(label_tensor, num_classes=num_classes)
