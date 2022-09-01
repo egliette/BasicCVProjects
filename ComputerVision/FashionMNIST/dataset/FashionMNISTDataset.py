@@ -1,4 +1,5 @@
 import pandas as pd
+import torch
 import torchvision
 from torch.utils.data import Dataset
 
@@ -16,7 +17,7 @@ class FashionMNISTDataset(Dataset):
     def __getitem__(self, idx):
         file_name = self.img_labels["file_name"].iloc[idx]
         file_path = "".join([self.img_dir, file_name])
-        img = torchvision.io.read_image(file_path)
+        img = torchvision.io.read_image(file_path).type(torch.float32)
         label = self.img_labels["label"].iloc[idx]
         if self.transform:
             img = self.transform(img)
