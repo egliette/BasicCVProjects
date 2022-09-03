@@ -3,3 +3,5 @@ torchvision
 tqdm
 matplotlib
 pandas
+tensorflow==2.8.2
+tensorboard==2.8
