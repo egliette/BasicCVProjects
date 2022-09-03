@@ -51,7 +51,7 @@ def plot_predictions_vs_labels(images, labels, outputs, predictions, labels_map)
     @param predictions (Tensor): argmax of outputs
     @return fig (figure): figure which shows 5 images with corresponding labels and predictions
     """
-    probs = F.softmax(outputs)
+    probs = F.softmax(outputs, dim=1)
     fig = plt.figure(figsize=(10, 10))
     for i in range(5):
         ith_label = labels_map[labels[i].cpu().item()]
