@@ -1,5 +1,7 @@
 ComputerVision/FashionMNIST/data/
-ComputerVision/FashionMNIST/logs
+ComputerVision/FashionMNIST/logs/
+ComputerVision/FashionMNISTwithLSTMs/data/
+ComputerVision/FashionMNISTwithLSTMs/logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
