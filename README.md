@@ -1,1 +1,3 @@
-# PytorchNonstop
+# Pytorch Basic Computer Vision Projects
+
+Just for fun ...

@@ -1,9 +1,8 @@
-ComputerVision/FashionMNIST/data/
-ComputerVision/FashionMNIST/logs/
-ComputerVision/FashionMNISTwithLSTMs/data/
-ComputerVision/FashionMNISTwithLSTMs/logs/
-NaturalLanguageProcessing/SentimentAnalysis/save/
-NaturalLanguageProcessing/SentimentAnalysis/.data/
+FashionMNIST/data/
+FashionMNIST/logs/
+FashionMNISTwithLSTMs/data/
+FashionMNISTwithLSTMs/logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
